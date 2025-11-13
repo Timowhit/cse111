@@ -37,14 +37,11 @@ def water_column_height(tower_height, tank_height):
     return tower_height + 3 * tank_height / 4
 
 def pressure_gain_from_water_height(height):
-    # Pressure gain from height (hydrostatic): rho * g * h, convert to kPa
-    g = 9.80665  # gravitational acceleration (m/s^2)
+    g = 9.80665
     return WATER_DENSITY * g * height / 1000
 
 def pressure_loss_from_pipe(pipe_diameter, pipe_length, friction_factor, fluid_velocity):
     numerator = -friction_factor * pipe_length * WATER_DENSITY * fluid_velocity ** 2
-    # Darcy-Weisbach: -f*(L/D)*(rho*v^2/2) in Pa; convert to kPa -> divide by 1000
-    # Combined factor -> divide by (2*1000) = 2000, then by D -> 2000*D
     denominator = 2000 * pipe_diameter
     return numerator / denominator
 
