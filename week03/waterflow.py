@@ -5,8 +5,8 @@ HDPE_SDR11_INNER_DIAMETER = 0.048692 # (meters)  1.917 inches
 HDPE_SDR11_FRICTION_FACTOR = 0.018   # (unitless)
 HOUSEHOLD_VELOCITY = 1.75            # (meters / second)
 WATER_DENSITY = 998.2                # density of water (998.2 kilogram / meter^3)
-EARTH_ACCELERATION_OF_GRAVITY = 9.80665 # (meters / second^2)
-WATER_DYNAMIC_VISCOSITY = 0.0010016  # (pascal seconds)
+EARTH_ACCELERATION_OF_GRAVITY = 9.80665 # acceleration due to gravity (9.80665 meter / second^2)
+WATER_DYNAMIC_VISCOSITY = 0.0010016  # dynamic viscosity of water (0.0010016 pascal second)
 
 def main():
     tower_height = float(input("Height of water tower (meters): "))
@@ -39,7 +39,7 @@ def water_column_height(tower_height, tank_height):
     return tower_height + 3 * tank_height / 4
 
 def pressure_gain_from_water_height(height):
-    g = 9.80665
+    g = EARTH_ACCELERATION_OF_GRAVITY
     return WATER_DENSITY * g * height / 1000
 
 def pressure_loss_from_pipe(pipe_diameter, pipe_length, friction_factor, fluid_velocity):
