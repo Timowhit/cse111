@@ -4,7 +4,10 @@ SUPPLY_VELOCITY = 1.65               # (meters / second)
 HDPE_SDR11_INNER_DIAMETER = 0.048692 # (meters)  1.917 inches
 HDPE_SDR11_FRICTION_FACTOR = 0.018   # (unitless)
 HOUSEHOLD_VELOCITY = 1.75            # (meters / second)
-WATER_DENSITY=998.2                  # density of water (998.2 kilogram / meter^3)
+WATER_DENSITY = 998.2                # density of water (998.2 kilogram / meter^3)
+EARTH_ACCELERATION_OF_GRAVITY = 9.80665 # (meters / second^2)
+WATER_DENSITY = 998.2                # density of water (998.2 kilogram / meter^3)
+WATER_DYNAMIC_VISCOSITY = 0.0010016  # (pascal seconds)
 
 def main():
     tower_height = float(input("Height of water tower (meters): "))
