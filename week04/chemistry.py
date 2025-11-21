@@ -121,9 +121,10 @@ def make_periodic_table():
     }
 
 def compute_molar_mass(composition):
+    periodic_table = make_periodic_table()
     mass = 0.0
     for element, count in composition.items():
-        mass += atomic_masses[element] * count
+        mass += periodic_table[element][1] * count
     return mass
 
 def compute_molar_mass(symbol_quantity_list, periodic_table_dict):
