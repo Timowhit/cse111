@@ -1,7 +1,7 @@
 import re
 
 def make_periodic_table():
-    return {
+    periodic_table_dict = {
         'H':["Hydrogen", 1.008],
         'He': ["Helium", 4.0026],
         'Li': ["Lithium", 6.94],
