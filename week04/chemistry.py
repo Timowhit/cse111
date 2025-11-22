@@ -1,5 +1,3 @@
-import re
-
 def make_periodic_table():
     periodic_table_dict = {
         'H':["Hydrogen", 1.008],
@@ -118,14 +116,8 @@ def make_periodic_table():
         'Lv': ["Livermorium", 293.0],
         'Ts': ["Tennessine", 294.0],
         'Og': ["Oganesson", 294.0],
-    }
-
-def compute_molar_mass(composition):
-    periodic_table = make_periodic_table()
-    mass = 0.0
-    for element, count in composition.items():
-        mass += periodic_table[element][1] * count
-    return mass
+        }
+    return periodic_table_dict
 
 def compute_molar_mass(symbol_quantity_list, periodic_table_dict):
     total_mass = 0.0
@@ -133,18 +125,6 @@ def compute_molar_mass(symbol_quantity_list, periodic_table_dict):
         atomic_mass = periodic_table_dict[symbol]
         total_mass += atomic_mass * quantity
     return total_mass
-
-def parse_formula(formula):
-    # Regex to match elements and their counts
-    pattern = r'([A-Z][a-z]?)(\d*)'
-    matches = re.findall(pattern, formula)
-    composition = {}
-    for (element, count) in matches:
-        if element not in make_periodic_table():
-            raise ValueError(f"Unknown element: {element}")
-        count = int(count) if count else 1
-        composition[element] = composition.get(element, 0) + count
-    return composition
 
 def main():
     formula = input("Enter the chemical formula: ").strip()
