@@ -1,3 +1,5 @@
+from formula import parse_formula
+
 def make_periodic_table():
     periodic_table_dict = {
         'H':["Hydrogen", 1.008],
@@ -116,27 +118,29 @@ def make_periodic_table():
         'Lv': ["Livermorium", 293.0],
         'Ts': ["Tennessine", 294.0],
         'Og': ["Oganesson", 294.0],
-        }
+    }
     return periodic_table_dict
 
 def compute_molar_mass(symbol_quantity_list, periodic_table_dict):
     total_mass = 0.0
-    for symbol, quantity in symbol_quantity_list:
-        atomic_mass = periodic_table_dict[symbol]
+    
+    for element_data in symbol_quantity_list:
+        symbol = element_data[0]
+        quantity = element_data[1]
+        atomic_mass = periodic_table_dict[symbol][1]
         total_mass += atomic_mass * quantity
+    
     return total_mass
 
 def main():
-    formula = input("Enter the chemical formula: ").strip()
-    sample_mass = float(input("Enter the mass of compound in grams: "))
-    try:
-        composition = parse_formula(formula)
-        molar_mass = compute_molar_mass(composition)
-        print(f"Molar mass of {formula}: {molar_mass:.3f} g/mol")
-        moles = sample_mass / molar_mass
-        print(f"Number of moles: {moles:.4f}")
-    except Exception as e:
-        print(f"Error: {e}")
+    periodic_table_dict = make_periodic_table()
+    formula = input("Enter the molecular formula of the sample: ")
+    sample_mass = float(input("Enter the mass in grams of the sample: "))
+    symbol_quantity_list = parse_formula(formula, periodic_table_dict)
+    molar_mass = compute_molar_mass(symbol_quantity_list, periodic_table_dict)
+    print(f"{molar_mass:.5f} grams/mole")
+    number_of_moles = sample_mass / molar_mass
+    print(f"{number_of_moles:.5f} moles")
 
 if __name__ == "__main__":
     main()
