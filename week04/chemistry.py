@@ -132,6 +132,22 @@ def compute_molar_mass(symbol_quantity_list, periodic_table_dict):
     
     return total_mass
 
+def compute_percent_yield(actual_mass, theoretical_mass):
+    """Compute percent yield given an actual (experimental) mass and
+    a theoretical (stoichiometric maximum) mass.
+
+    Parameters:
+        actual_mass: float, the measured mass of product obtained.
+        theoretical_mass: float, the maximum possible mass from stoichiometry.
+    Returns:
+        float percent yield (0-100).
+    Raises:
+        ValueError: if theoretical_mass <= 0.
+    """
+    if theoretical_mass <= 0:
+        raise ValueError("Theoretical mass must be greater than zero.")
+    return (actual_mass / theoretical_mass) * 100.0
+
 def main():
     periodic_table_dict = make_periodic_table()
     formula = input("Enter the molecular formula of the sample: ").upper()
@@ -141,6 +157,16 @@ def main():
     print(f"{molar_mass:.5f} grams/mole")
     number_of_moles = sample_mass / molar_mass
     print(f"{number_of_moles:.5f} moles")
+    # Optional percent yield calculation
+    theoretical_yield_input = input("Enter the theoretical yield in grams (press Enter to skip): ").strip()
+    if theoretical_yield_input:
+        try:
+            theoretical_yield_mass = float(theoretical_yield_input)
+            percent_yield = compute_percent_yield(sample_mass, theoretical_yield_mass)
+            print(f"{percent_yield:.2f}% percent yield")
+        except ValueError:
+            print("Invalid theoretical yield; percent yield not computed.")
+    
 
 if __name__ == "__main__":
     main()
