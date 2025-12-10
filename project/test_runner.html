@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeSmart Guide - Test Runner</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --card-bg: #16213e;
+            --text: #eee;
+            --success: #27ae60;
+            --fail: #e74c3c;
+            --info: #3498db;
+            --border: rgba(255,255,255,0.1);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 2rem;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .summary-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        
+        .summary-card.total {
+            border-color: var(--info);
+        }
+        
+        .summary-card.passed {
+            border-color: var(--success);
+        }
+        
+        .summary-card.failed {
+            border-color: var(--fail);
+        }
+        
+        .summary-card .number {
+            font-size: 3rem;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .summary-card.passed .number {
+            color: var(--success);
+        }
+        
+        .summary-card.failed .number {
+            color: var(--fail);
+        }
+        
+        .summary-card.total .number {
+            color: var(--info);
+        }
+        
+        .summary-card .label {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--fail);
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        
+        .progress-bar .fill {
+            height: 100%;
+            background: var(--success);
+            transition: width 0.5s ease;
+        }
+        
+        .test-suites {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .test-suite {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        
+        .suite-header {
+            padding: 1rem 1.5rem;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .suite-header:hover {
+            background: rgba(0,0,0,0.3);
+        }
+        
+        .suite-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .suite-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .suite-stats .pass {
+            color: var(--success);
+        }
+        
+        .suite-stats .fail {
+            color: var(--fail);
+        }
+        
+        .suite-tests {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .test-suite.expanded .suite-tests {
+            max-height: 2000px;
+        }
+        
+        .test-item {
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .test-item:last-child {
+            border-bottom: none;
+        }
+        
+        .test-icon {
+            font-size: 1.2rem;
+        }
+        
+        .test-icon.pass {
+            color: var(--success);
+        }
+        
+        .test-icon.fail {
+            color: var(--fail);
+        }
+        
+        .test-name {
+            flex: 1;
+        }
+        
+        .test-error {
+            font-size: 0.85rem;
+            color: var(--fail);
+            padding: 0.5rem 1.5rem 0.75rem 3rem;
+            background: rgba(231, 76, 60, 0.1);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--info);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .console-output {
+            background: #0d0d1a;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 2rem;
+            white-space: pre-wrap;
+            border: 1px solid var(--border);
+        }
+        
+        .console-output .log-pass {
+            color: var(--success);
+        }
+        
+        .console-output .log-fail {
+            color: var(--fail);
+        }
+        
+        .console-output .log-info {
+            color: var(--info);
+        }
+        
+        .console-output .log-header {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .timestamp {
+            text-align: center;
+            color: rgba(255,255,255,0.4);
+            font-size: 0.85rem;
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .summary-cards {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .suite-header {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 TradeSmart Guide</h1>
+        <p class="subtitle">Comprehensive Test Suite</p>
+        
+        <div class="controls">
+            <button class="btn btn-primary" onclick="runTests()">▶️ Run All Tests</button>
+            <button class="btn btn-secondary" onclick="expandAll()">📂 Expand All</button>
+            <button class="btn btn-secondary" onclick="collapseAll()">📁 Collapse All</button>
+        </div>
+        
+        <div class="summary-cards">
+            <div class="summary-card total">
+                <span class="number" id="totalCount">-</span>
+                <span class="label">Total Tests</span>
+            </div>
+            <div class="summary-card passed">
+                <span class="number" id="passedCount">-</span>
+                <span class="label">Passed</span>
+            </div>
+            <div class="summary-card failed">
+                <span class="number" id="failedCount">-</span>
+                <span class="label">Failed</span>
+            </div>
+            <div class="summary-card">
+                <span class="number" id="successRate">-</span>
+                <span class="label">Success Rate</span>
+            </div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        
+        <div class="test-suites" id="testSuites">
+            <div class="loading">Running tests...</div>
+        </div>
+        
+        <div class="console-output" id="consoleOutput"></div>
+        
+        <p class="timestamp" id="timestamp"></p>
+    </div>
+
+    <script>
+        // ============================================
+        // TEST FRAMEWORK
+        // ============================================
+        
+        const TestRunner = {
+            tests: [],
+            passed: 0,
+            failed: 0,
+            results: [],
+            suites: {},
+            consoleLog: [],
+
+            reset() {
+                this.tests = [];
+                this.passed = 0;
+                this.failed = 0;
+                this.results = [];
+                this.suites = {};
+                this.consoleLog = [];
+            },
+
+            log(message, type = 'info') {
+                this.consoleLog.push({ message, type });
+            },
+
+            describe(suiteName, fn) {
+                this.log(`\n📦 ${suiteName}`, 'header');
+                this.log('─'.repeat(50), 'info');
+                this.currentSuite = suiteName;
+                this.suites[suiteName] = { tests: [], passed: 0, failed: 0 };
+                fn();
+            },
+
+            test(name, fn) {
+                try {
+                    fn();
+                    this.passed++;
+                    this.suites[this.currentSuite].passed++;
+                    this.suites[this.currentSuite].tests.push({ name, status: 'PASS' });
+                    this.results.push({ suite: this.currentSuite, name, status: 'PASS' });
+                    this.log(`  ✅ ${name}`, 'pass');
+                } catch (error) {
+                    this.failed++;
+                    this.suites[this.currentSuite].failed++;
+                    this.suites[this.currentSuite].tests.push({ name, status: 'FAIL', error: error.message });
+                    this.results.push({ suite: this.currentSuite, name, status: 'FAIL', error: error.message });
+                    this.log(`  ❌ ${name}`, 'fail');
+                    this.log(`     Error: ${error.message}`, 'fail');
+                }
+            },
+
+            assertEqual(actual, expected, message = '') {
+                if (actual !== expected) {
+                    throw new Error(`${message} Expected ${expected}, got ${actual}`);
+                }
+            },
+
+            assertAlmostEqual(actual, expected, tolerance = 0.01, message = '') {
+                if (Math.abs(actual - expected) > tolerance) {
+                    throw new Error(`${message} Expected ~${expected}, got ${actual} (tolerance: ${tolerance})`);
+                }
+            },
+
+            assertTrue(condition, message = '') {
+                if (!condition) {
+                    throw new Error(message || 'Expected true, got false');
+                }
+            },
+
+            assertFalse(condition, message = '') {
+                if (condition) {
+                    throw new Error(message || 'Expected false, got true');
+                }
+            },
+
+            assertInRange(value, min, max, message = '') {
+                if (value < min || value > max) {
+                    throw new Error(`${message} Value ${value} not in range [${min}, ${max}]`);
+                }
+            }
+        };
+
+        // ============================================
+        // FUNCTIONS TO TEST
+        // ============================================
+        
+        const compoundingPeriods = { daily: 365, monthly: 12, quarterly: 4, annually: 1 };
+        const frequencyMultipliers = { weekly: 52, biweekly: 26, monthly: 12, quarterly: 4, annually: 1 };
+
+        function calculateAdvancedProjection(principal, recurringAmount, frequency, years, annualRate, inflationRate, contributionIncrease, compoundFreq) {
+            const periodsPerYear = compoundingPeriods[compoundFreq] || 12;
+            const contributionsPerYear = frequencyMultipliers[frequency] || 12;
+            const ratePerPeriod = (annualRate / 100) / periodsPerYear;
+            const inflationRateDecimal = inflationRate / 100;
+            const contributionIncreaseDecimal = contributionIncrease / 100;
+
+            let totalValue = principal;
+            let totalContributions = principal;
+            let currentContribution = recurringAmount;
+
+            for (let year = 0; year < years; year++) {
+                if (year > 0) currentContribution *= (1 + contributionIncreaseDecimal);
+                for (let month = 0; month < 12; month++) {
+                    const contributionsThisMonth = (contributionsPerYear / 12) * currentContribution;
+                    totalContributions += contributionsThisMonth;
+                    totalValue += contributionsThisMonth;
+                    const monthlyRate = Math.pow(1 + ratePerPeriod, periodsPerYear / 12) - 1;
+                    totalValue *= (1 + monthlyRate);
+                }
+            }
+
+            const inflationFactor = Math.pow(1 + inflationRateDecimal, years);
+            return {
+                nominalValue: Math.round(totalValue),
+                realValue: Math.round(totalValue / inflationFactor),
+                totalContributions: Math.round(totalContributions),
+                totalGrowth: Math.round(totalValue - totalContributions)
+            };
+        }
+
+        function generateStockRecommendations(amount, stocksPct, bondsPct, altsPct) {
+            const recommendations = [];
+            const stockAmount = amount * (stocksPct / 100);
+            const bondAmount = amount * (bondsPct / 100);
+            const altAmount = amount * (altsPct / 100);
+            
+            if (stockAmount > 0) {
+                recommendations.push({ ticker: 'VTI', name: 'Vanguard Total Stock Market ETF', amount: stockAmount * 0.6, percentage: stocksPct * 0.6 });
+                recommendations.push({ ticker: 'VXUS', name: 'Vanguard Total International Stock ETF', amount: stockAmount * 0.4, percentage: stocksPct * 0.4 });
+            }
+            if (bondAmount > 0) recommendations.push({ ticker: 'BND', name: 'Vanguard Total Bond Market ETF', amount: bondAmount, percentage: bondsPct });
+            if (altAmount > 0) recommendations.push({ ticker: 'VNQ', name: 'Vanguard Real Estate ETF', amount: altAmount, percentage: altsPct });
+            
+            return recommendations;
+        }
+
+        function calculateProjectedValue(principal, years, annualRate) {
+            return Math.round(principal * Math.pow(1 + (annualRate / 100), years));
+        }
+
+        const DEFAULT_OPTIMIZED_CONFIG = {
+            tradingBuffer: 0.03, smaWindow: 20, maxCashPerStock: 0.25, minSharesToBuy: 5,
+            trendSmaWindow: 50, requireTrendAlignment: true, takeProfitPct: 0.08, stopLossPct: 0.04,
+            useTrailingStop: true, trailingStopTrigger: 0.05, trailingStopDistance: 0.02,
+            checkInterval: 300, sessionDurationMinutes: 120, sessionsPerWeek: 2.5, verbose: true
+        };
+
+        function simulatePrice(stock, priceHistory, config) {
+            const basePrices = { 'QQQ': 520, 'SPY': 590, 'VOO': 540, 'TSLA': 250, 'AAPL': 195 };
+            let basePrice = basePrices[stock] || 100 + Math.random() * 200;
+            let lastPrice = priceHistory.length > 0 ? priceHistory[priceHistory.length - 1].price : basePrice;
+            const change = (Math.random() - 0.48) * 0.004 * lastPrice;
+            const newPrice = Math.max(lastPrice + change, 1);
+            priceHistory.push({ price: newPrice, time: new Date() });
+            if (priceHistory.length > 100) priceHistory.shift();
+            
+            const prices = priceHistory.map(p => p.price);
+            const smaWindow = Math.min(config.smaWindow, prices.length);
+            const sma = prices.slice(-smaWindow).reduce((a, b) => a + b, 0) / smaWindow;
+            const trendWindow = Math.min(config.trendSmaWindow, prices.length);
+            const trendSma = prices.slice(-trendWindow).reduce((a, b) => a + b, 0) / trendWindow;
+            
+            return { price: newPrice, sma, trendSma, ratio: newPrice / sma };
+        }
+
+        function evaluateSignal(priceData, holding, config) {
+            const { price, sma, trendSma, ratio } = priceData;
+            const inUptrend = price > trendSma;
+            let action = 'HOLD', reason = '';
+            
+            if (holding.shares > 0) {
+                const currentProfitPct = (price / holding.avgPrice - 1);
+                const drawdownFromHigh = holding.highSinceBuy > 0 ? (price / holding.highSinceBuy - 1) : 0;
+                
+                if (currentProfitPct >= config.takeProfitPct) { action = 'SELL'; reason = `TAKE_PROFIT: ${(currentProfitPct * 100).toFixed(1)}% gain`; }
+                else if (currentProfitPct <= -config.stopLossPct) { action = 'SELL'; reason = `STOP_LOSS: ${(currentProfitPct * 100).toFixed(1)}% loss`; }
+                else if (config.useTrailingStop && currentProfitPct > config.trailingStopTrigger && drawdownFromHigh < -config.trailingStopDistance) {
+                    action = 'SELL'; reason = `TRAILING_STOP: gave back ${(-drawdownFromHigh * 100).toFixed(1)}%`;
+                }
+                else if (ratio > (1 + config.tradingBuffer) && !inUptrend) { action = 'SELL'; reason = 'SMA_SIGNAL + DOWNTREND'; }
+            }
+            
+            if (holding.shares === 0 && ratio < (1 - config.tradingBuffer)) {
+                if (config.requireTrendAlignment && !inUptrend) { action = 'BLOCKED'; reason = 'BUY blocked - price below trend SMA'; }
+                else { action = 'BUY'; reason = `Buffer triggered at ${((ratio - 1) * 100).toFixed(2)}%`; }
+            }
+            
+            return { action, reason, inUptrend, profitPct: holding.shares > 0 ? (price / holding.avgPrice - 1) : 0 };
+        }
+
+        function calculateSMA(prices, window) {
+            if (prices.length === 0) return 0;
+            const slice = prices.slice(-Math.min(window, prices.length));
+            return slice.reduce((a, b) => a + b, 0) / slice.length;
+        }
+
+        function validateAllocation(stocks, bonds, alternatives) {
+            const total = stocks + bonds + alternatives;
+            return { isValid: Math.abs(total - 100) < 0.01, total, stocks, bonds, alternatives };
+        }
+
+        // ============================================
+        // TEST DEFINITIONS
+        // ============================================
+        
+        function defineTests() {
+            TestRunner.describe('Advanced Projection Calculator', () => {
+                TestRunner.test('Basic projection without contributions', () => {
+                    const result = calculateAdvancedProjection(10000, 0, 'monthly', 10, 7, 2.5, 0, 'monthly');
+                    TestRunner.assertTrue(result.nominalValue > 10000, 'Should grow');
+                    TestRunner.assertTrue(result.realValue < result.nominalValue, 'Real < nominal');
+                    TestRunner.assertEqual(result.totalContributions, 10000, 'Contributions = principal');
+                });
+
+                TestRunner.test('Projection with monthly contributions', () => {
+                    const result = calculateAdvancedProjection(10000, 500, 'monthly', 10, 7, 2.5, 0, 'monthly');
+                    TestRunner.assertTrue(result.totalContributions > 69000, 'Should have ~$70k contributions');
+                });
+
+                TestRunner.test('Contribution increases work', () => {
+                    const with3 = calculateAdvancedProjection(10000, 500, 'monthly', 10, 7, 2.5, 3, 'monthly');
+                    const with0 = calculateAdvancedProjection(10000, 500, 'monthly', 10, 7, 2.5, 0, 'monthly');
+                    TestRunner.assertTrue(with3.totalContributions > with0.totalContributions, 'Increases should add more');
+                });
+
+                TestRunner.test('Zero return preserves principal', () => {
+                    const result = calculateAdvancedProjection(10000, 0, 'monthly', 5, 0, 0, 0, 'monthly');
+                    TestRunner.assertAlmostEqual(result.nominalValue, 10000, 100, 'Should equal principal');
+                });
+
+                TestRunner.test('Daily compounds more than annual', () => {
+                    const daily = calculateAdvancedProjection(10000, 0, 'monthly', 10, 10, 0, 0, 'daily');
+                    const annual = calculateAdvancedProjection(10000, 0, 'monthly', 10, 10, 0, 0, 'annually');
+                    TestRunner.assertTrue(daily.nominalValue >= annual.nominalValue, 'Daily >= annual');
+                });
+            });
+
+            TestRunner.describe('Stock Recommendations Generator', () => {
+                TestRunner.test('60/30/10 allocation returns 4 items', () => {
+                    const rec = generateStockRecommendations(10000, 60, 30, 10);
+                    TestRunner.assertEqual(rec.length, 4, 'Should have 4 recommendations');
+                });
+
+                TestRunner.test('Amounts sum to total', () => {
+                    const rec = generateStockRecommendations(10000, 60, 30, 10);
+                    const total = rec.reduce((s, r) => s + r.amount, 0);
+                    TestRunner.assertAlmostEqual(total, 10000, 1, 'Should sum to $10k');
+                });
+
+                TestRunner.test('Percentages sum to 100%', () => {
+                    const rec = generateStockRecommendations(10000, 60, 30, 10);
+                    const total = rec.reduce((s, r) => s + r.percentage, 0);
+                    TestRunner.assertAlmostEqual(total, 100, 0.1, 'Should sum to 100%');
+                });
+
+                TestRunner.test('100% stocks returns 2 items', () => {
+                    const rec = generateStockRecommendations(10000, 100, 0, 0);
+                    TestRunner.assertEqual(rec.length, 2, 'Only stock ETFs');
+                });
+            });
+
+            TestRunner.describe('Simple Projected Value', () => {
+                TestRunner.test('10 years at 7%', () => {
+                    const result = calculateProjectedValue(10000, 10, 7);
+                    TestRunner.assertAlmostEqual(result, 19672, 100, 'Should ~double');
+                });
+
+                TestRunner.test('Zero years returns principal', () => {
+                    TestRunner.assertEqual(calculateProjectedValue(10000, 0, 10), 10000, 'Should return principal');
+                });
+            });
+
+            TestRunner.describe('Optimized Trading Config', () => {
+                TestRunner.test('Buffer is 3%', () => TestRunner.assertEqual(DEFAULT_OPTIMIZED_CONFIG.tradingBuffer, 0.03, 'Buffer = 3%'));
+                TestRunner.test('SMA window is 20', () => TestRunner.assertEqual(DEFAULT_OPTIMIZED_CONFIG.smaWindow, 20, 'SMA = 20'));
+                TestRunner.test('Position size is 25%', () => TestRunner.assertEqual(DEFAULT_OPTIMIZED_CONFIG.maxCashPerStock, 0.25, 'Position = 25%'));
+                TestRunner.test('Take profit is 8%', () => TestRunner.assertEqual(DEFAULT_OPTIMIZED_CONFIG.takeProfitPct, 0.08, 'TP = 8%'));
+                TestRunner.test('Stop loss is 4%', () => TestRunner.assertEqual(DEFAULT_OPTIMIZED_CONFIG.stopLossPct, 0.04, 'SL = 4%'));
+                TestRunner.test('Trend filter enabled', () => TestRunner.assertTrue(DEFAULT_OPTIMIZED_CONFIG.requireTrendAlignment, 'Trend filter ON'));
+                TestRunner.test('Session is 120 min', () => TestRunner.assertEqual(DEFAULT_OPTIMIZED_CONFIG.sessionDurationMinutes, 120, 'Session = 2hr'));
+            });
+
+            TestRunner.describe('Price Simulator', () => {
+                TestRunner.test('Generates valid data', () => {
+                    const history = [];
+                    const result = simulatePrice('SPY', history, { smaWindow: 20, trendSmaWindow: 50 });
+                    TestRunner.assertTrue(result.price > 0, 'Price > 0');
+                    TestRunner.assertTrue(result.sma > 0, 'SMA > 0');
+                });
+
+                TestRunner.test('Caps history at 100', () => {
+                    const history = [];
+                    for (let i = 0; i < 150; i++) simulatePrice('SPY', history, { smaWindow: 20, trendSmaWindow: 50 });
+                    TestRunner.assertEqual(history.length, 100, 'Capped at 100');
+                });
+            });
+
+            TestRunner.describe('Signal Evaluation', () => {
+                TestRunner.test('Take profit at 8%', () => {
+                    const result = evaluateSignal({ price: 108, sma: 100, trendSma: 95, ratio: 1.08 }, { shares: 10, avgPrice: 100, highSinceBuy: 108 }, DEFAULT_OPTIMIZED_CONFIG);
+                    TestRunner.assertEqual(result.action, 'SELL');
+                    TestRunner.assertTrue(result.reason.includes('TAKE_PROFIT'));
+                });
+
+                TestRunner.test('Stop loss at 4%', () => {
+                    const result = evaluateSignal({ price: 96, sma: 100, trendSma: 105, ratio: 0.96 }, { shares: 10, avgPrice: 100, highSinceBuy: 100 }, DEFAULT_OPTIMIZED_CONFIG);
+                    TestRunner.assertEqual(result.action, 'SELL');
+                    TestRunner.assertTrue(result.reason.includes('STOP_LOSS'));
+                });
+
+                TestRunner.test('Buy in uptrend', () => {
+                    const result = evaluateSignal({ price: 96, sma: 100, trendSma: 95, ratio: 0.96 }, { shares: 0, avgPrice: 0, highSinceBuy: 0 }, DEFAULT_OPTIMIZED_CONFIG);
+                    TestRunner.assertEqual(result.action, 'BUY');
+                });
+
+                TestRunner.test('Buy blocked in downtrend', () => {
+                    const result = evaluateSignal({ price: 96, sma: 100, trendSma: 100, ratio: 0.96 }, { shares: 0, avgPrice: 0, highSinceBuy: 0 }, DEFAULT_OPTIMIZED_CONFIG);
+                    TestRunner.assertEqual(result.action, 'BLOCKED');
+                });
+
+                TestRunner.test('Hold when neutral', () => {
+                    const result = evaluateSignal({ price: 100, sma: 100, trendSma: 98, ratio: 1.0 }, { shares: 10, avgPrice: 99, highSinceBuy: 100 }, DEFAULT_OPTIMIZED_CONFIG);
+                    TestRunner.assertEqual(result.action, 'HOLD');
+                });
+            });
+
+            TestRunner.describe('SMA Calculation', () => {
+                TestRunner.test('Simple average', () => TestRunner.assertEqual(calculateSMA([100, 102, 104, 106, 108], 5), 104));
+                TestRunner.test('Partial window', () => TestRunner.assertEqual(calculateSMA([100, 105], 20), 102.5));
+                TestRunner.test('Empty array', () => TestRunner.assertEqual(calculateSMA([], 20), 0));
+                TestRunner.test('Window of 1', () => TestRunner.assertEqual(calculateSMA([100, 105, 110, 115, 120], 1), 120));
+            });
+
+            TestRunner.describe('Allocation Validation', () => {
+                TestRunner.test('Valid 60/30/10', () => TestRunner.assertTrue(validateAllocation(60, 30, 10).isValid));
+                TestRunner.test('Invalid over 100%', () => TestRunner.assertFalse(validateAllocation(60, 30, 20).isValid));
+                TestRunner.test('Invalid under 100%', () => TestRunner.assertFalse(validateAllocation(50, 30, 10).isValid));
+            });
+
+            TestRunner.describe('Frequency Multipliers', () => {
+                TestRunner.test('Weekly = 52', () => TestRunner.assertEqual(frequencyMultipliers.weekly, 52));
+                TestRunner.test('Monthly = 12', () => TestRunner.assertEqual(frequencyMultipliers.monthly, 12));
+                TestRunner.test('Quarterly = 4', () => TestRunner.assertEqual(frequencyMultipliers.quarterly, 4));
+            });
+
+            TestRunner.describe('Edge Cases', () => {
+                TestRunner.test('50 year projection', () => {
+                    const result = calculateAdvancedProjection(10000, 100, 'monthly', 50, 7, 2.5, 0, 'monthly');
+                    TestRunner.assertTrue(result.nominalValue > 500000);
+                });
+
+                TestRunner.test('High inflation negative real returns', () => {
+                    const result = calculateAdvancedProjection(10000, 0, 'monthly', 10, 2, 10, 0, 'monthly');
+                    TestRunner.assertTrue(result.realValue < 10000);
+                });
+
+                TestRunner.test('Small $100 investment', () => {
+                    const rec = generateStockRecommendations(100, 60, 30, 10);
+                    TestRunner.assertEqual(rec.length, 4);
+                });
+            });
+        }
+
+        // ============================================
+        // UI FUNCTIONS
+        // ============================================
+        
+        function runTests() {
+            TestRunner.reset();
+            defineTests();
+            updateUI();
+        }
+
+        function updateUI() {
+            // Update summary cards
+            document.getElementById('totalCount').textContent = TestRunner.passed + TestRunner.failed;
+            document.getElementById('passedCount').textContent = TestRunner.passed;
+            document.getElementById('failedCount').textContent = TestRunner.failed;
+            
+            const rate = TestRunner.passed + TestRunner.failed > 0 
+                ? ((TestRunner.passed / (TestRunner.passed + TestRunner.failed)) * 100).toFixed(1) + '%'
+                : '-';
+            document.getElementById('successRate').textContent = rate;
+            
+            // Update progress bar
+            const fillPct = TestRunner.passed + TestRunner.failed > 0 
+                ? (TestRunner.passed / (TestRunner.passed + TestRunner.failed)) * 100 
+                : 0;
+            document.getElementById('progressFill').style.width = fillPct + '%';
+            
+            // Update test suites
+            const suitesContainer = document.getElementById('testSuites');
+            suitesContainer.innerHTML = '';
+            
+            for (const [suiteName, suite] of Object.entries(TestRunner.suites)) {
+                const suiteDiv = document.createElement('div');
+                suiteDiv.className = 'test-suite';
+                
+                suiteDiv.innerHTML = `
+                    <div class="suite-header" onclick="this.parentElement.classList.toggle('expanded')">
+                        <span class="suite-name">${suiteName}</span>
+                        <span class="suite-stats">
+                            <span class="pass">✅ ${suite.passed}</span>
+                            <span class="fail">❌ ${suite.failed}</span>
+                        </span>
+                    </div>
+                    <div class="suite-tests">
+                        ${suite.tests.map(test => `
+                            <div class="test-item">
+                                <span class="test-icon ${test.status === 'PASS' ? 'pass' : 'fail'}">
+                                    ${test.status === 'PASS' ? '✅' : '❌'}
+                                </span>
+                                <span class="test-name">${test.name}</span>
+                            </div>
+                            ${test.error ? `<div class="test-error">${test.error}</div>` : ''}
+                        `).join('')}
+                    </div>
+                `;
+                
+                suitesContainer.appendChild(suiteDiv);
+            }
+            
+            // Update console output
+            const consoleDiv = document.getElementById('consoleOutput');
+            consoleDiv.innerHTML = TestRunner.consoleLog.map(log => 
+                `<span class="log-${log.type}">${log.message}</span>`
+            ).join('\n');
+            
+            // Update timestamp
+            document.getElementById('timestamp').textContent = 'Last run: ' + new Date().toLocaleString();
+        }
+
+        function expandAll() {
+            document.querySelectorAll('.test-suite').forEach(s => s.classList.add('expanded'));
+        }
+
+        function collapseAll() {
+            document.querySelectorAll('.test-suite').forEach(s => s.classList.remove('expanded'));
+        }
+
+        // Run tests on load
+        window.onload = runTests;
+    </script>
+</body>
+</html>
